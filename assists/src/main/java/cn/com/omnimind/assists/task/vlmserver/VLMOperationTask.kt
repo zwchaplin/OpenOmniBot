@@ -323,6 +323,7 @@ open class VLMOperationTask(
                     )
                 }
                 OmniLog.d(Tag, "VLM Operation Task Finished: $taskExecutionReport")
+                val aborted = taskExecutionReport.aborted
                 val finishType = when {
                     taskExecutionReport.success -> TaskFinishType.FINISH
                     else -> TaskFinishType.ERROR
@@ -350,6 +351,20 @@ open class VLMOperationTask(
                             message = extractFinishedContent(taskExecutionReport),
                             finishedContent = extractFinishedContent(taskExecutionReport),
                             summaryText = summaryResult.summaryText,
+                            needSummary = shouldSummary,
+                            feedback = taskExecutionReport.feedback,
+                            summaryUnavailable = summaryResult.summaryUnavailable
+                        )
+                    )
+                } else if (aborted) {
+                    val errorMessage = finishMessage.ifBlank { "任务已终止" }
+                    notifyTerminalResult(
+                        VlmTaskTerminalResult(
+                            status = VlmTaskTerminalStatus.ABORT,
+                            message = errorMessage,
+                            finishedContent = null,
+                            summaryText = summaryResult.summaryText,
+                            errorMessage = errorMessage,
                             needSummary = shouldSummary,
                             feedback = taskExecutionReport.feedback,
                             summaryUnavailable = summaryResult.summaryUnavailable

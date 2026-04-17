@@ -73,8 +73,11 @@ object McpTaskManager {
     fun cleanupExpiredTasks(maxAgeMs: Long = 600_000) {
         val now = System.currentTimeMillis()
         activeTasks.entries.removeIf { (_, state) ->
-            (state.status == TaskStatus.FINISHED || state.status == TaskStatus.ERROR || state.status == TaskStatus.CANCELLED)
-                    && (now - state.startTime) > maxAgeMs
+            (state.status == TaskStatus.FINISHED ||
+                state.status == TaskStatus.ABORT ||
+                state.status == TaskStatus.ERROR ||
+                state.status == TaskStatus.CANCELLED) &&
+                (now - state.startTime) > maxAgeMs
         }
     }
     

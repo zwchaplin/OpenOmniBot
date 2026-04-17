@@ -805,6 +805,7 @@ class AgentToolRouter(
                     ToolExecutionResult.Clarify(localizedQuestion, null)
                 }
                 VlmToolOutcomeStatus.ERROR,
+                VlmToolOutcomeStatus.ABORT,
                 VlmToolOutcomeStatus.CANCELLED -> {
                     errorResult(
                         "vlm_task",

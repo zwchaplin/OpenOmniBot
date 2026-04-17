@@ -505,7 +505,8 @@ class VLMOperationService(
                     totalSteps = stepIndex + 1,
                     executionTrace = executionTrace,
                     finalContext = context,
-                    error = "任务终止: ${(step.action as AbortAction).value}"
+                    error = "任务终止: ${(step.action as AbortAction).value}",
+                    aborted = true
                 )
             }
             stepIndex++
@@ -1212,5 +1213,6 @@ data class TaskExecutionReport(
     val finalContext: UIContext,
     val error: String?,
     val summaryScreenshotList: List<String>? = null,
-    val feedback: String? = null
+    val feedback: String? = null,
+    val aborted: Boolean = false
 )

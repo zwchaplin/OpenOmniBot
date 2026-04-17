@@ -44,6 +44,7 @@ enum class TaskStatus {
     USER_PAUSED,       // 用户主动暂停
     SCREEN_LOCKED,     // 屏幕锁定/息屏，等待解锁
     FINISHED,          // 任务完成
+    ABORT,             // 任务终止
     ERROR,             // 任务出错
     CANCELLED          // 任务取消
 }
@@ -107,6 +108,7 @@ data class TaskState(
             VlmTaskTerminalStatus.WAITING_INPUT -> TaskStatus.WAITING_INPUT
             VlmTaskTerminalStatus.FINISHED -> TaskStatus.FINISHED
             VlmTaskTerminalStatus.ERROR -> TaskStatus.ERROR
+            VlmTaskTerminalStatus.ABORT -> TaskStatus.ABORT
             VlmTaskTerminalStatus.CANCELLED -> TaskStatus.CANCELLED
         }
         message = result.message.ifBlank {

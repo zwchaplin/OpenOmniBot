@@ -27,6 +27,7 @@ enum class VlmToolOutcomeStatus {
     SCREEN_LOCKED,
     ERROR,
     TIMEOUT,
+    ABORT,
     CANCELLED
 }
 
@@ -258,6 +259,7 @@ object VlmToolCoordinator {
                 TaskStatus.WAITING_INPUT -> "等待用户输入"
                 TaskStatus.SCREEN_LOCKED -> "等待解锁"
                 TaskStatus.FINISHED -> "已完成"
+                TaskStatus.ABORT -> "已终止"
                 TaskStatus.ERROR -> "执行失败"
                 TaskStatus.CANCELLED -> "已取消"
                 TaskStatus.USER_PAUSED -> "等待用户继续"
@@ -293,6 +295,13 @@ object VlmToolCoordinator {
                     }
                     return state.toOutcome(VlmToolOutcomeStatus.FINISHED)
                 }
+                TaskStatus.ABORT -> {
+                    return state.toOutcome(
+                        status = VlmToolOutcomeStatus.ABORT,
+                        message = state.message.ifBlank { "任务已终止" },
+                        errorMessage = state.message.ifBlank { "任务已终止" }
+                    )
+                }
                 TaskStatus.ERROR -> {
                     return state.toOutcome(
                         status = VlmToolOutcomeStatus.ERROR,
@@ -325,10 +334,31 @@ object VlmToolCoordinator {
         }
 
         val state = McpTaskManager.getTask(taskId)
-        if (state?.status == TaskStatus.FINISHED) {
-            return state.toOutcome(VlmToolOutcomeStatus.FINISHED)
+        if (state != null) {
+            return when (state.status) {
+                TaskStatus.FINISHED -> state.toOutcome(VlmToolOutcomeStatus.FINISHED)
+                TaskStatus.ABORT -> state.toOutcome(
+                    status = VlmToolOutcomeStatus.ABORT,
+                    message = state.message.ifBlank { "任务已终止" },
+                    errorMessage = state.message.ifBlank { "任务已终止" }
+                )
+                TaskStatus.ERROR -> state.toOutcome(
+                    status = VlmToolOutcomeStatus.ERROR,
+                    message = state.message.ifBlank { "任务执行失败" },
+                    errorMessage = state.message.ifBlank { "任务执行失败" }
+                )
+                TaskStatus.CANCELLED -> state.toOutcome(
+                    status = VlmToolOutcomeStatus.CANCELLED,
+                    message = state.message.ifBlank { "任务已取消" },
+                    errorMessage = state.message.ifBlank { "任务已取消" }
+                )
+                else -> state.toOutcome(
+                    status = VlmToolOutcomeStatus.TIMEOUT,
+                    message = "任务在等待时间内仍未结束，仍在设备上继续执行。"
+                )
+            }
         }
-        return (state ?: TaskState(taskId = taskId, goal = goal, status = TaskStatus.RUNNING)).toOutcome(
+        return TaskState(taskId = taskId, goal = goal, status = TaskStatus.RUNNING).toOutcome(
             status = VlmToolOutcomeStatus.TIMEOUT,
             message = "任务在等待时间内仍未结束，仍在设备上继续执行。"
         )

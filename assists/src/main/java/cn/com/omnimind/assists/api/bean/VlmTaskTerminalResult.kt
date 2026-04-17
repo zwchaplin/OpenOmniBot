@@ -4,6 +4,7 @@ enum class VlmTaskTerminalStatus {
     WAITING_INPUT,
     FINISHED,
     ERROR,
+    ABORT,
     CANCELLED
 }
 

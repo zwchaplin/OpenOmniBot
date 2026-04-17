@@ -132,6 +132,7 @@ object McpToolExecutors {
             // 如果已经不是锁屏状态，直接返回当前状态
             return@withContext when (taskState.status) {
                 TaskStatus.FINISHED -> McpResponseBuilder.buildFinishedResponse(taskState)
+                TaskStatus.ABORT -> McpResponseBuilder.buildAbortResponse(taskState)
                 TaskStatus.ERROR -> McpResponseBuilder.buildErrorResponse(taskState)
                 TaskStatus.WAITING_INPUT -> McpResponseBuilder.buildWaitingInputResponse(taskState)
                 TaskStatus.RUNNING -> outcomeToMcpResponse(
@@ -255,6 +256,10 @@ object McpToolExecutors {
             VlmToolOutcomeStatus.SCREEN_LOCKED -> {
                 state?.let { McpResponseBuilder.buildScreenLockedResponse(it, isInitial = false) }
                     ?: McpResponseBuilder.buildTextResponse(outcome.message)
+            }
+            VlmToolOutcomeStatus.ABORT -> {
+                state?.let(McpResponseBuilder::buildAbortResponse)
+                    ?: McpResponseBuilder.buildErrorText(outcome.errorMessage ?: outcome.message)
             }
             VlmToolOutcomeStatus.ERROR, VlmToolOutcomeStatus.CANCELLED -> {
                 state?.let(McpResponseBuilder::buildErrorResponse)

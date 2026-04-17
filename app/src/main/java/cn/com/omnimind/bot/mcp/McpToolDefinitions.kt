@@ -74,7 +74,7 @@ This is a backup tool - normally vlm_task and task_reply will wait and return th
 Only use this if a previous call timed out but the task is still running.
 
 Returns the task state including:
-- status: RUNNING, WAITING_INPUT, USER_PAUSED, FINISHED, ERROR, CANCELLED
+- status: RUNNING, WAITING_INPUT, USER_PAUSED, FINISHED, ABORT, ERROR, CANCELLED
 - message: Status message or error description
 - waitingQuestion: When status is WAITING_INPUT, contains the question the agent is asking
 - chatMessages: Recent agent reasoning/action messages

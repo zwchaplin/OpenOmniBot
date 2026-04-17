@@ -70,6 +70,27 @@ ${t("错误", "Error")}: ${state.message}""".trimIndent()
             "isError" to true
         )
     }
+
+    fun buildAbortResponse(state: TaskState): Map<String, Any?> {
+        val message = state.message.ifBlank { t("任务已终止。", "Task was aborted.") }
+        return mapOf(
+            "content" to listOf(mapOf(
+                "type" to "text",
+                "text" to """${t("⚠️ 任务已终止。", "⚠️ Task was aborted.")}
+
+${t("任务 ID", "Task ID")}: ${state.taskId}
+${t("目标", "Goal")}: ${state.goal}
+${t("原因", "Reason")}: $message""".trimIndent()
+            )),
+            "status" to "ABORT",
+            "finishedContent" to state.finishedContent,
+            "summary" to state.summaryText,
+            "summaryUnavailable" to state.summaryUnavailable,
+            "feedback" to state.feedback,
+            "recentActivity" to state.chatMessages.takeLast(5),
+            "isError" to true
+        )
+    }
     
     fun buildWaitingInputResponse(state: TaskState): Map<String, Any?> {
         return mapOf(
