@@ -21,6 +21,7 @@
 ]]></string>
     <string name="task_finish">任务完成啦!</string>
     <string name="task_stop">任务结束啦!</string>
+    <string name="task_abort">任务已终止!</string>
     <string name="task_error">任务结束!</string>
     <string name="app_not_install">APP未安装!</string>
     <string name="generating">生成中...</string>

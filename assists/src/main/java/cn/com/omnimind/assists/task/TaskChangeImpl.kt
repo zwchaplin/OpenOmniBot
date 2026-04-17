@@ -59,6 +59,7 @@ class TaskChangeImpl(val assistsEventApi: AssistsEventApi?) : TaskChangeListener
             TaskType.SCHEDULED_VLM_OPERATION_EXECUTION -> {
                 val states = when (finishType) {
                     TaskFinishType.CANCEL -> ScheduledStates.CANCELED
+                    TaskFinishType.ABORT -> ScheduledStates.FAILED
                     TaskFinishType.ERROR -> ScheduledStates.FAILED
                     TaskFinishType.FINISH -> ScheduledStates.FINISHED
                     TaskFinishType.WAITING_INPUT -> ScheduledStates.RUNNING

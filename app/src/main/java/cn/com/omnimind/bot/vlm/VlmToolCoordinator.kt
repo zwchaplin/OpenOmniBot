@@ -280,42 +280,23 @@ object VlmToolCoordinator {
                 lastProgress = progress
             }
 
+            if (state.status == TaskStatus.FINISHED &&
+                state.needSummary &&
+                state.summaryText.isNullOrBlank() &&
+                !state.summaryUnavailable
+            ) {
+                if (summaryWaitStart == null) {
+                    summaryWaitStart = System.currentTimeMillis()
+                }
+                if (System.currentTimeMillis() - summaryWaitStart < SUMMARY_WAIT_GRACE_MS) {
+                    delay(McpTaskManager.POLL_INTERVAL_MS)
+                    continue
+                }
+                state.summaryUnavailable = true
+                state.markStateChanged()
+            }
+            state.toTerminalOutcome()?.let { return it }
             when (state.status) {
-                TaskStatus.FINISHED -> {
-                    if (state.needSummary && state.summaryText.isNullOrBlank() && !state.summaryUnavailable) {
-                        if (summaryWaitStart == null) {
-                            summaryWaitStart = System.currentTimeMillis()
-                        }
-                        if (System.currentTimeMillis() - summaryWaitStart < SUMMARY_WAIT_GRACE_MS) {
-                            delay(McpTaskManager.POLL_INTERVAL_MS)
-                            continue
-                        }
-                        state.summaryUnavailable = true
-                        state.markStateChanged()
-                    }
-                    return state.toOutcome(VlmToolOutcomeStatus.FINISHED)
-                }
-                TaskStatus.ABORT -> {
-                    return state.toOutcome(
-                        status = VlmToolOutcomeStatus.ABORT,
-                        message = state.message.ifBlank { "任务已终止" },
-                        errorMessage = state.message.ifBlank { "任务已终止" }
-                    )
-                }
-                TaskStatus.ERROR -> {
-                    return state.toOutcome(
-                        status = VlmToolOutcomeStatus.ERROR,
-                        message = state.message.ifBlank { "任务执行失败" },
-                        errorMessage = state.message.ifBlank { "任务执行失败" }
-                    )
-                }
-                TaskStatus.CANCELLED -> {
-                    return state.toOutcome(
-                        status = VlmToolOutcomeStatus.CANCELLED,
-                        message = state.message.ifBlank { "任务已取消" },
-                        errorMessage = state.message.ifBlank { "任务已取消" }
-                    )
-                }
                 TaskStatus.WAITING_INPUT, TaskStatus.USER_PAUSED -> {
                     return state.toOutcome(
                         status = VlmToolOutcomeStatus.WAITING_INPUT,
@@ -330,38 +311,23 @@ object VlmToolCoordinator {
                     )
                 }
                 TaskStatus.RUNNING -> delay(McpTaskManager.POLL_INTERVAL_MS)
+                else -> delay(McpTaskManager.POLL_INTERVAL_MS)
             }
         }
 
         val state = McpTaskManager.getTask(taskId)
         if (state != null) {
-            return when (state.status) {
-                TaskStatus.FINISHED -> state.toOutcome(VlmToolOutcomeStatus.FINISHED)
-                TaskStatus.ABORT -> state.toOutcome(
-                    status = VlmToolOutcomeStatus.ABORT,
-                    message = state.message.ifBlank { "任务已终止" },
-                    errorMessage = state.message.ifBlank { "任务已终止" }
-                )
-                TaskStatus.ERROR -> state.toOutcome(
-                    status = VlmToolOutcomeStatus.ERROR,
-                    message = state.message.ifBlank { "任务执行失败" },
-                    errorMessage = state.message.ifBlank { "任务执行失败" }
-                )
-                TaskStatus.CANCELLED -> state.toOutcome(
-                    status = VlmToolOutcomeStatus.CANCELLED,
-                    message = state.message.ifBlank { "任务已取消" },
-                    errorMessage = state.message.ifBlank { "任务已取消" }
-                )
-                else -> state.toOutcome(
-                    status = VlmToolOutcomeStatus.TIMEOUT,
-                    message = "任务在等待时间内仍未结束，仍在设备上继续执行。"
-                )
-            }
+            state.toTerminalOutcome()?.let { return it }
+            return state.toOutcome(
+                status = VlmToolOutcomeStatus.TIMEOUT,
+                message = "任务在等待时间内仍未结束，仍在设备上继续执行。"
+            )
         }
-        return TaskState(taskId = taskId, goal = goal, status = TaskStatus.RUNNING).toOutcome(
-            status = VlmToolOutcomeStatus.TIMEOUT,
-            message = "任务在等待时间内仍未结束，仍在设备上继续执行。"
-        )
+        return TaskState(taskId = taskId, goal = goal, status = TaskStatus.RUNNING)
+            .toOutcome(
+                status = VlmToolOutcomeStatus.TIMEOUT,
+                message = "任务在等待时间内仍未结束，仍在设备上继续执行。"
+            )
     }
 
     private suspend fun startVlmTaskInternal(
@@ -506,6 +472,28 @@ object VlmToolCoordinator {
             summaryUnavailable = summaryUnavailable,
             recentActivity = chatMessages.takeLast(5)
         )
+    }
+
+    private fun TaskState.toTerminalOutcome(): VlmToolOutcome? {
+        return when (status) {
+            TaskStatus.FINISHED -> toOutcome(VlmToolOutcomeStatus.FINISHED)
+            TaskStatus.ABORT -> toOutcome(
+                status = VlmToolOutcomeStatus.ABORT,
+                message = message.ifBlank { "任务已终止" },
+                errorMessage = message.ifBlank { "任务已终止" }
+            )
+            TaskStatus.ERROR -> toOutcome(
+                status = VlmToolOutcomeStatus.ERROR,
+                message = message.ifBlank { "任务执行失败" },
+                errorMessage = message.ifBlank { "任务执行失败" }
+            )
+            TaskStatus.CANCELLED -> toOutcome(
+                status = VlmToolOutcomeStatus.CANCELLED,
+                message = message.ifBlank { "任务已取消" },
+                errorMessage = message.ifBlank { "任务已取消" }
+            )
+            else -> null
+        }
     }
 
     private fun isSummaryMessage(taskId: String): Boolean {

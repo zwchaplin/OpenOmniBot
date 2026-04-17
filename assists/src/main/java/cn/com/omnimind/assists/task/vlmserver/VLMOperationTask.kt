@@ -326,6 +326,7 @@ open class VLMOperationTask(
                 val aborted = taskExecutionReport.aborted
                 val finishType = when {
                     taskExecutionReport.success -> TaskFinishType.FINISH
+                    aborted -> TaskFinishType.ABORT
                     else -> TaskFinishType.ERROR
                 }
                 val finishMessage = taskExecutionReport.error.orEmpty()
