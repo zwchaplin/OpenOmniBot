@@ -311,10 +311,7 @@ object VlmToolCoordinator {
                     )
                 }
                 TaskStatus.RUNNING -> delay(McpTaskManager.POLL_INTERVAL_MS)
-                TaskStatus.FINISHED,
-                TaskStatus.ABORT,
-                TaskStatus.ERROR,
-                TaskStatus.CANCELLED -> delay(McpTaskManager.POLL_INTERVAL_MS)
+                else -> delay(McpTaskManager.POLL_INTERVAL_MS)
             }
         }
 

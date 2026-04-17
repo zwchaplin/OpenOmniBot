@@ -345,6 +345,22 @@ open class VLMOperationTask(
                     SummaryPushResult()
                 }
 
+                fun buildFailureResult(
+                    status: VlmTaskTerminalStatus,
+                    message: String
+                ): VlmTaskTerminalResult {
+                    return VlmTaskTerminalResult(
+                        status = status,
+                        message = message,
+                        finishedContent = null,
+                        summaryText = summaryResult.summaryText,
+                        errorMessage = message,
+                        needSummary = shouldSummary,
+                        feedback = taskExecutionReport.feedback,
+                        summaryUnavailable = summaryResult.summaryUnavailable
+                    )
+                }
+
                 if (taskExecutionReport.success) {
                     notifyTerminalResult(
                         VlmTaskTerminalResult(
@@ -359,32 +375,10 @@ open class VLMOperationTask(
                     )
                 } else if (aborted) {
                     val abortMessage = finishMessage.ifBlank { TaskFinishType.ABORT.message }
-                    notifyTerminalResult(
-                        VlmTaskTerminalResult(
-                            status = VlmTaskTerminalStatus.ABORT,
-                            message = abortMessage,
-                            finishedContent = null,
-                            summaryText = summaryResult.summaryText,
-                            errorMessage = abortMessage,
-                            needSummary = shouldSummary,
-                            feedback = taskExecutionReport.feedback,
-                            summaryUnavailable = summaryResult.summaryUnavailable
-                        )
-                    )
+                    notifyTerminalResult(buildFailureResult(VlmTaskTerminalStatus.ABORT, abortMessage))
                 } else {
                     val errorMessage = finishMessage.ifBlank { "任务执行失败" }
-                    notifyTerminalResult(
-                        VlmTaskTerminalResult(
-                            status = VlmTaskTerminalStatus.ERROR,
-                            message = errorMessage,
-                            finishedContent = null,
-                            summaryText = summaryResult.summaryText,
-                            errorMessage = errorMessage,
-                            needSummary = shouldSummary,
-                            feedback = taskExecutionReport.feedback,
-                            summaryUnavailable = summaryResult.summaryUnavailable
-                        )
-                    )
+                    notifyTerminalResult(buildFailureResult(VlmTaskTerminalStatus.ERROR, errorMessage))
                 }
                 onTaskStop(finishType, finishMessage)
                 onTaskDestroy()
