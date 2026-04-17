@@ -474,6 +474,9 @@ object VlmToolCoordinator {
         )
     }
 
+    /**
+     * Convert terminal task states to a VlmToolOutcome; return null for non-terminal states.
+     */
     private fun TaskState.toTerminalOutcome(): VlmToolOutcome? {
         return when (status) {
             TaskStatus.FINISHED -> toOutcome(VlmToolOutcomeStatus.FINISHED)

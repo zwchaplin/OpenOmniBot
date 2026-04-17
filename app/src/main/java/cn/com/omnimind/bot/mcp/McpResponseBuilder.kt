@@ -71,6 +71,12 @@ ${t("错误", "Error")}: ${state.message}""".trimIndent()
         )
     }
 
+    /**
+     * Build MCP response for an aborted task state.
+     *
+     * @param state Current task state marked as ABORT.
+     * @return Response payload with status=ABORT and isError=true for client handling.
+     */
     fun buildAbortResponse(state: TaskState): Map<String, Any?> {
         val message = state.message.ifBlank { t("任务已终止。", "Task was aborted.") }
         return mapOf(
