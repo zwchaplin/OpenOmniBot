@@ -358,7 +358,7 @@ open class VLMOperationTask(
                         )
                     )
                 } else if (aborted) {
-                    val errorMessage = finishMessage.ifBlank { "任务已终止" }
+                    val errorMessage = finishMessage.ifBlank { TaskFinishType.ABORT.message }
                     notifyTerminalResult(
                         VlmTaskTerminalResult(
                             status = VlmTaskTerminalStatus.ABORT,
